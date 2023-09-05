@@ -7,6 +7,13 @@ import numpy as np
 ASSETS_PATH = Path(__file__).parent / "assets"
 
 def test_basic():
+    """
+    Test a basic 4-panel site with static images.
+
+    Compare to:
+    https://s3.amazonaws.com/reveal.internationalbrainlab.org/basic_test.html
+    """
+
     lu_path = ASSETS_PATH / "left_upper.png"
     ru_path = ASSETS_PATH / "right_upper.png"
     ll_path = ASSETS_PATH / "left_lower.png"
@@ -27,6 +34,13 @@ def test_basic():
     webbrowser.open(f"file://{rs.reveal_path}/basic_test.html")
 
 def test_basic_compare():
+    """
+    Test a basic 4-panel site with comparison sliders.
+
+    Compare to: 
+    https://s3.amazonaws.com/reveal.internationalbrainlab.org/basic_test_slider.html
+    """
+
     lu_path = ASSETS_PATH / "left_upper.png"
     ru_path = ASSETS_PATH / "right_upper.png"
     ll_path = ASSETS_PATH / "left_lower.png"
