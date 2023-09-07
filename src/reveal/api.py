@@ -2,6 +2,7 @@ from reveal import reveal
 import pandas as pd
 from pathlib import Path
 import os
+import webbrowser
 
 class RevealSite:
 
@@ -29,21 +30,26 @@ class RevealSite:
         for col in self.df:
             self.prez.new_section()
             for idx, slide in self.df[col].items():
-                assert isinstance(slide, dict), "Each elemement of RevealSite.df must be a dict"
-                image_path = slide["image_path"]
-                title = slide["title"]
-                if "image_path_compare" in slide:
-                    image_path_cmp = slide["image_path_compare"]
-                    self.prez.add_slide_compare(full_path_image1=image_path,
-                                                full_path_image2=image_path_cmp,
+                if isinstance(slide, dict):
+                    image_path = slide["image_path"]
+                    title = slide["title"]
+                    if "image_path_compare" in slide:
+                        image_path_cmp = slide["image_path_compare"]
+                        self.prez.add_slide_compare(full_path_image1=image_path,
+                                                    full_path_image2=image_path_cmp,
+                                                    title=title)
+                    else:
+                        self.prez.add_slide_image(full_path_image=image_path,
                                                 title=title)
-                else:
-                    self.prez.add_slide_image(full_path_image=image_path,
-                                              title=title)
             self.prez.close_section()
 
         self.prez.build()
 
+    def open(self):
+        """
+        Open the site locally in web browser.
+        """
+        webbrowser.open(f"file://{self.reveal_path}/{self.name}.html")
 
     def publish(self, page_name=None):
         """
