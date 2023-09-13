@@ -4,7 +4,7 @@ import numpy as np
 from iblutil.numerical import ismember
 from one.api import ONE
 from brainbox.io.one import SpikeSortingLoader
-from ibllib.atlas import BrainRegions
+from iblatlas.regions import BrainRegions
 from PIL import Image
 import pandas as pd
 import reveal

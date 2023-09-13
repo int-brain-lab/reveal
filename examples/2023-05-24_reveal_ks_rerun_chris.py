@@ -6,7 +6,7 @@ from brainbox.io.one import SpikeSortingLoader
 import scipy
 from viewephys.gui import viewephys
 from neurodsp.voltage import destripe
-from ibllib.atlas import BrainRegions
+from iblatlas.regions import BrainRegions
 from brainbox.io.spikeglx import Streamer
 from iblutil.util import Bunch
 import neuropixel

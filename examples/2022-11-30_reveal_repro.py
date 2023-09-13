@@ -5,7 +5,7 @@ from PIL import Image
 import reveal
 from one.api import ONE
 import reproducible_ephys_functions
-from ibllib.atlas import BrainRegions
+from iblatlas.regions import BrainRegions
 
 REVEAL_PATH = Path.home().joinpath('Documents/JS/reproducible')
 BWM_DIR = Path("/mnt/s1/bwm")
