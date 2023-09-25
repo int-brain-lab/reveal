@@ -63,6 +63,7 @@ class RevealSite:
             page_name = self.name
         os.system(f"aws s3 cp {self.reveal_path}/{self.name}.html s3://reveal.internationalbrainlab.org/{page_name}.html ")
         os.system(f"aws s3 sync {self.reveal_path}/images/{self.name}/ s3://reveal.internationalbrainlab.org/images/{self.name}/")
+        print(f"Published at: https://s3.amazonaws.com/reveal.internationalbrainlab.org/{page_name}.html")
 
 
 
