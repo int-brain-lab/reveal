@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 import webbrowser
 import numpy as np
+import pytest
 
 ASSETS_PATH = Path(__file__).parent / "assets"
 
@@ -29,9 +30,14 @@ def test_basic():
     df = pd.DataFrame(arr)
 
     rs = RevealSite(df, "basic_test")
-    rs.build()
 
-    webbrowser.open(f"file://{rs.reveal_path}/basic_test.html")
+    # bad theme should fail
+    with pytest.raises(ValueError):
+        rs.build(theme="bla")
+
+    # default theme here
+    rs.build(theme="white")
+    rs.open()
 
 def test_basic_compare():
     """
@@ -70,8 +76,8 @@ def test_basic_compare():
 
     rs = RevealSite(df, "basic_test_slider")
     rs.build()
+    rs.open()
 
-    webbrowser.open(f"file://{rs.reveal_path}/basic_test_slider.html")
 
 
 

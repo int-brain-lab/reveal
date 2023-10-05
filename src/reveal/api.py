@@ -6,6 +6,22 @@ import webbrowser
 
 class RevealSite:
 
+    themes = [
+        "black",
+        "white",
+        "league",
+        "beige",
+        "night",
+        "serif",
+        "simple",
+        "solarized",
+        "moon",
+        "dracula",
+        "sky",
+        "blood",
+
+    ]
+
     def __init__(self, df, name, reveal_path = None):
         """
         :param df: A Pandas DataFrame of dicts. Each dict must contain
@@ -22,11 +38,13 @@ class RevealSite:
 
         self.prez = reveal.Presentation(self.name, self.reveal_path)
 
-    def build(self):
+    def build(self, theme="white"):
         """
         Construct presentation locally. The webpage will appear in the
         `reveal_path` as "`self.name`.html"
         """
+        if theme not in self.themes:
+            raise ValueError(f"{theme} is not a revealJS theme! Use one of {str(self.themes)}")
         for col in self.df:
             self.prez.new_section()
             for idx, slide in self.df[col].items():
@@ -43,7 +61,7 @@ class RevealSite:
                                                 title=title)
             self.prez.close_section()
 
-        self.prez.build()
+        self.prez.build(theme=theme)
 
     def open(self):
         """

@@ -13,7 +13,7 @@ from brainbox.io.spikeglx import Streamer
 from brainbox.io.one import SessionLoader, SpikeSortingLoader
 from viewephys.gui import viewephys
 from neurodsp.voltage import destripe
-from ibllib.atlas import BrainRegions
+from iblatlas.regions import BrainRegions
 from iblutil.numerical import ismember
 from one.alf.exceptions import ALFObjectNotFound
 
