@@ -7,6 +7,7 @@ import pytest
 
 ASSETS_PATH = Path(__file__).parent / "assets"
 
+
 def test_basic():
     """
     Test a basic 4-panel site with static images.
@@ -20,11 +21,11 @@ def test_basic():
     ll_path = ASSETS_PATH / "left_lower.png"
     rl_path = ASSETS_PATH / "right_lower.png"
 
-    arr = np.empty((2,2), object)
+    arr = np.empty((2, 2), object)
 
     arr[0, 0] = {"image_path": lu_path, "title": "Left Upper"}
-    arr[0, 1] = {"image_path": ru_path, "title": "Right Upper"}
-    arr[1, 0] = {"image_path": ll_path, "title": "Left Lower"}
+    arr[0, 1] = {"image_path": ru_path, "title": "Right Upper", "post": "This is a post scriptum."}
+    arr[1, 0] = {"image_path": ll_path, "title": "Left Lower", "image_name": 'tutu.jpg'}
     arr[1, 1] = {"image_path": rl_path, "title": "Right Lower"}
     
     df = pd.DataFrame(arr)
@@ -38,6 +39,7 @@ def test_basic():
     # default theme here
     rs.build(theme="white")
     rs.open()
+
 
 def test_basic_compare():
     """
@@ -57,11 +59,11 @@ def test_basic_compare():
     ll_path_cmp = ASSETS_PATH / "left_lower_compare.png"
     rl_path_cmp = ASSETS_PATH / "right_lower_compare.png"
 
-    arr = np.empty((2,2), object)
+    arr = np.empty((2, 2), object)
 
     arr[0, 0] = {"image_path": lu_path,
                  "image_path_compare": lu_path_cmp, 
-                 "title": "Left Upper",}
+                 "title": "Left Upper"}
     arr[0, 1] = {"image_path": ru_path, 
                  "image_path_compare": ru_path_cmp, 
                  "title": "Right Upper"}
@@ -77,8 +79,3 @@ def test_basic_compare():
     rs = RevealSite(df, "basic_test_slider")
     rs.build()
     rs.open()
-
-
-
-
-

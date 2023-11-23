@@ -7,7 +7,6 @@ import logging
 
 from PIL import Image
 
-
 from one.api import ONE
 from brainbox.io.spikeglx import Streamer
 from brainbox.io.one import SessionLoader, SpikeSortingLoader
@@ -32,8 +31,14 @@ class Presentation(object):
         self.path_images = Path(path_reveal).joinpath('images', name)
         self.path_images.mkdir(parents=True, exist_ok=True)
 
-    def _convert_image(self, full_path_image, clobber=True):
-        jpg_image = Path(self.path_images).joinpath(Path(full_path_image).name).with_suffix('.jpg')
+    def _convert_image(self, full_path_image, image_name=None, clobber=True):
+        """
+        :param full_path_image:
+        :param clobber:
+        :return:
+        """
+        image_name = image_name or Path(full_path_image).name
+        jpg_image = Path(self.path_images).joinpath(image_name).with_suffix('.jpg')
         if clobber or not jpg_image.exists():
             pimg = Image.open(full_path_image)
             pimg.convert('RGB').save(jpg_image)
@@ -50,21 +55,22 @@ class Presentation(object):
         # TODO
         pass
 
-    def add_slide_image(self, full_path_image, title=None, post=''):
-        img_name = self._convert_image(full_path_image)
+    def add_slide_image(self, full_path_image, title=None, post='', image_name=None):
+        img_name = self._convert_image(full_path_image, image_name=image_name)
         if title is None:
             title = img_name
         str_slide = f"""
         <section>
             <p>{title}</p>
             <img data-src=images/{self.name}/{img_name}>
-        {post}</section>
+            <p>{post}</p>
+        </section>
         """
         self.list_buffer.append(str_slide)
 
-    def add_slide_compare(self, full_path_image1, full_path_image2, title=None, post=''):
-        img_name1 = self._convert_image(full_path_image1)
-        img_name2 = self._convert_image(full_path_image2)
+    def add_slide_compare(self, full_path_image1, full_path_image2, title=None, post='', image_name1=None, image_name2=None):
+        img_name1 = self._convert_image(full_path_image1, image_name1)
+        img_name2 = self._convert_image(full_path_image2, image_name1)
         if title is None:
             title = img_name1
         str_slide = f"""
