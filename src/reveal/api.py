@@ -84,7 +84,7 @@ class RevealSite:
         """
         webbrowser.open(f"file://{self.reveal_path}/{self.name}.html")
 
-    def publish(self, page_name=None):
+    def publish(self, page_name=None, profile=None):
         """
         Publish the site to IBL reveal on AWS.
         Requires AWS CLI access.
@@ -92,11 +92,19 @@ class RevealSite:
         :param page_name: Name of webpage on IBL reveal to publish to. 
             Defaults to self.name
         """
+        import subprocess
+
         if page_name is None:
             page_name = self.name
-        os.system(f"aws s3 cp {self.reveal_path}/{self.name}.html s3://reveal.internationalbrainlab.org/{page_name}.html ")
-        os.system(f"aws s3 sync {self.reveal_path}/images/{self.name}/ s3://reveal.internationalbrainlab.org/images/{self.name}/")
-        print(f"Published at: https://s3.amazonaws.com/reveal.internationalbrainlab.org/{page_name}.html")
-
-
-
+        command1 = ['aws', 's3', 'cp', f"{self.reveal_path}/{self.name}.html",
+                    f"s3://reveal.internationalbrainlab.org/{page_name}.html"]
+        command2 = ['aws', 's3', 'sync', f"{self.reveal_path}/images/{self.name}/",
+                    f"s3://reveal.internationalbrainlab.org/images/{self.name}/"]
+        if profile is not None:
+            command1.extend(['--profile', profile])
+            command2.extend(['--profile', profile])
+        print(' '.join(command1))
+        print(' '.join(command2))
+        subprocess.run(command1)
+        subprocess.run(command2)
+        print(f"Published at: http://reveal.internationalbrainlab.org.s3-website-us-east-1.amazonaws.com/{page_name}.html")
