@@ -1,7 +1,4 @@
 from reveal import reveal
-import pandas as pd
-from pathlib import Path
-import os
 import webbrowser
 
 class RevealSite:
