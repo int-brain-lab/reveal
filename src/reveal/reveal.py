@@ -72,7 +72,7 @@ class Presentation(object):
         self.list_buffer.append(str_slide)
 
     def build(self, theme='white', title=None):
-        """Build reveal.js index.html file"""
+        """Builds the site index.html file"""
         file_index_template = self.path_reveal.joinpath('index_template.html')
         file_presentation = self.path_reveal.joinpath(f'{self.name}.html')
 

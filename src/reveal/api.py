@@ -1,5 +1,7 @@
 from reveal import reveal
 import webbrowser
+import pandas as pd
+
 
 class RevealSite:
 
@@ -33,16 +35,15 @@ class RevealSite:
         To implement a slider comparison for two images you can add the following keys:
             {
             ...
-            "image_name_compare": full_path_to_image_2,
-            "image_path_compare": "unique_image_name2.jpg"  # optional, to avoid conflicts if several images bear the same name
+            "image_path_compare": full_path_to_image_2,
+            "image_name_compare": "unique_image_name2.jpg"  # optional, to avoid conflicts if several images bear the same name
             }
         :param name: The name of the site.
         :param reveal_path: Local path to the Revealjs files.
         """
-        self.df = df
+        self.df = pd.DataFrame(df)
         self.name = name
-        if not reveal_path:
-            self.reveal_path = reveal.REVEAL_PATH
+        self.reveal_path = reveal.REVEAL_PATH if reveal_path is None else reveal_path
         self.prez = reveal.Presentation(self.name, self.reveal_path)
 
     def build(self, theme="white"):

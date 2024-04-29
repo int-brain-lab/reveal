@@ -27,32 +27,34 @@ pip install -e .
 
 # Tutorial
 
-In this tutorial we will create a new presentation from scratch and serve it on a developent server.
-
+In this tutorial we will create a new presentation from scratch and serve it on a development server.
 In a second time we will deploy the presentation to an S3 bucket and serve it as a static website.
 
-## Create the slide deck
-
+## Create the slide deck and serve it locally
 ### Create a new project for the slide deck
 
+In the directory of your choice, here `~/Documents/JS`, clone the directory
 ```shell
-PROJECT_NAME=spike_sorting_rerun
+cd ~/Documents/JS
+PROJECT_NAME=slide_deck_tutorial
 git clone https://github.com/oliche/reveal.js.git -b ibl $PROJECT_NAME
 cd $PROJECT_NAME
 #ln -s ../reveal.js/node_modules node_modules  # optional to avoid duplication of node_modules engine
 mkdir img
-cp index_template.html index.html
 npm install
 ```
 
-## run a local server
+### Create a 2 rows and 3 columns slide deck
+
+[./examples/getting_started.py](./examples/getting_started.py)
+
+### eventually run a local server to look at the slides
 `npm start -- --port=8001`
 
-## update the bucket
+## Serve the slide deck on a static website on AWS S3
 aws --profile ibl s3 sync ~/Documents/JS/reveal.js s3://reveal.internationalbrainlab.org --delete --exclude reveal.js/node_modules
 
 ## Create a new website
-
 `aws --profile ibl s3 sync ~/Documents/JS/reveal.js s3://reveal.internationalbrainlab.org --exclude reveal.js/node_modules`
 http://reveal.internationalbrainlab.org.s3-website-us-east-1.amazonaws.com
 
@@ -87,5 +89,3 @@ bucket=reveal.internationalbrainlab.org
 aws --profile ibl s3 sync ~/Documents/JS/reveal s3://reveal.internationalbrainlab.org --delete
 echo http://$bucket.s3-website-us-east-1.amazonaws.com --exclude reveal.js/node_modules`
 ```
-
-
