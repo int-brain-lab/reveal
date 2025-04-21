@@ -2,6 +2,7 @@ from pathlib import Path
 import logging
 
 from PIL import Image
+import uuid
 
 logger = logging.getLogger(__name__)
 REVEAL_PATH = Path.home().joinpath('Documents/JS/reveal.js')
@@ -18,14 +19,18 @@ class Presentation(object):
         self.path_images = Path(path_reveal).joinpath('images', name)
         self.path_images.mkdir(parents=True, exist_ok=True)
 
-    def _convert_image(self, full_path_image, image_name=None, clobber=True):
+    def _convert_image(self, full_path_image, image_name=None, clobber=True, subfolder=None):
         """
         :param full_path_image:
         :param clobber:
         :return:
         """
         image_name = image_name or Path(full_path_image).name
-        jpg_image = Path(self.path_images).joinpath(image_name).with_suffix('.jpg')
+        output_path = Path(self.path_images)
+        if subfolder is not None:
+            output_path = output_path.joinpath(subfolder)
+            output_path.mkdir(parents=True, exist_ok=True)
+        jpg_image = output_path.joinpath(image_name).with_suffix('.jpg')
         if clobber or not jpg_image.exists():
             pimg = Image.open(full_path_image)
             pimg.convert('RGB').save(jpg_image)
@@ -42,30 +47,32 @@ class Presentation(object):
         # TODO
         pass
 
-    def add_slide_image(self, full_path_image, title=None, post='', image_name=None):
-        img_name = self._convert_image(full_path_image, image_name=image_name)
+    def add_slide_image(self, full_path_image, title=None, post='', image_name=None, column_idx=None):
+        slide_folder = f'slide_{column_idx:04d}'
+        img_name = self._convert_image(full_path_image, image_name=image_name, subfolder=slide_folder)
         if title is None:
             title = img_name
         str_slide = f"""
         <section>
             <p>{title}</p>
-            <img data-src=images/{self.name}/{img_name}>
+            <img data-src=images/{self.name}/{slide_folder}/{img_name}>
             <p>{post}</p>
         </section>
         """
         self.list_buffer.append(str_slide)
 
-    def add_slide_compare(self, full_path_image1, full_path_image2, title=None, post='', image_name1=None, image_name2=None):
-        img_name1 = self._convert_image(full_path_image1, image_name1)
-        img_name2 = self._convert_image(full_path_image2, image_name1)
+    def add_slide_compare(self, full_path_image1, full_path_image2, title=None, post='', image_name1=None, image_name2=None, column_idx=None):
+        slide_folder = f'slide_{column_idx:04d}'
+        img_name1 = self._convert_image(full_path_image1, image_name1, subfolder=slide_folder)
+        img_name2 = self._convert_image(full_path_image2, image_name2, subfolder=slide_folder)
         if title is None:
             title = img_name1
         str_slide = f"""
         <section>
             <p>{title}</p>
             <div class="r-stack"><div class="compare">
-                <img data-src=images/{self.name}/{img_name1}>
-                <img data-src=images/{self.name}/{img_name2}>
+                <img data-src=images/{self.name}/{slide_folder}/{img_name1}>
+                <img data-src=images/{self.name}/{slide_folder}/{img_name2}>
             </div></div>
         {post}</section>
         """

@@ -53,7 +53,7 @@ class RevealSite:
         """
         if theme not in self.themes:
             raise ValueError(f"{theme} is not a revealJS theme! Use one of {str(self.themes)}")
-        for col in self.df:
+        for column_idx, col in enumerate(self.df):
             self.prez.new_section()
             for idx, slide in self.df[col].items():
                 if isinstance(slide, dict):
@@ -65,6 +65,7 @@ class RevealSite:
                             image_name2=slide.get('image_name_compare', None),
                             title=slide["title"],
                             post=slide.get('post', ''),
+                            column_idx=column_idx,
                         )
                     else:
                         self.prez.add_slide_image(
@@ -72,6 +73,7 @@ class RevealSite:
                             image_name=slide.get('image_name', None),
                             title=slide["title"],
                             post=slide.get('post', ''),
+                            column_idx=column_idx,
                         )
             self.prez.close_section()
         self.prez.build(theme=theme)
