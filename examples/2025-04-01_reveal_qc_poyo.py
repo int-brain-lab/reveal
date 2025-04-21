@@ -1,5 +1,4 @@
-# %%
-
+# %% List of Pids from Matt / Cole
 PIDS = [
     '22609d51-0a6a-425d-a3ef-eeb43a9ba350',
     '94fcff55-2da2-4366-a2c7-2f58c05b54dc',
@@ -154,24 +153,45 @@ PIDS = [
     'bf746764-78e0-4b9c-bdf6-65b6ff45745d',
     '24149f5c-2984-4b48-922b-3cd1452cd4bd'
 ]
+
+# %% Step 1: Create the reveal deck of images
 import joblib
 from pathlib import Path
+import tqdm
 
 import pandas as pd
 import numpy as np
-import tqdm
-from brainbox.io.one import SpikeSortingLoader, SessionLoader
+
 from one.api import ONE
 import iblatlas.atlas
+import reveal.plots
 
 one = ONE(base_url='https://alyx.internationalbrainlab.org')
 OVERWRITE = True
 path_reveal = Path(f"/home/olivier/scratch/reveal_poyo")
-path_reveal.joinpath('parquet').mkdir(exist_ok=True, parents=True)
+path_reveal.mkdir(parents=True, exist_ok=True)
 regions = iblatlas.atlas.BrainRegions()
 
 
-# %%
+def make_pid_reveal_figures_multiprocessing(pid):
+    try:
+        reveal.plots.pid_electrophysiology_qc(
+            pid=pid,
+            path_reveal=path_reveal,
+            regions=regions,
+            one=one
+        )
+    except Exception as e:
+        for _ in range(30):
+            print(f"Error processing PID {pid}: {str(e)}")
+
+jobs = []
+for pid in PIDS:
+    jobs.append(joblib.delayed(make_pid_reveal_figures_multiprocessing)(pid))
+
+list(tqdm.tqdm(joblib.Parallel(return_as='generator', n_jobs=8)(jobs)))
+
+# %% Builds the website locally
 from reveal.api import RevealSite
 
 c = 0
@@ -192,88 +212,13 @@ for i, pid in enumerate(PIDS):
         ])[np.newaxis, :])
 print(c, c / len(PIDS))
 
-deck = np.concatenate(deck).T
-
-
-pd.DataFrame(deck).shape
-
-
-
-# %%
 reveal_path = Path.home().joinpath('Documents/Reveal/reveal.internationalbrainlab.org')
 site = RevealSite(deck, name='foundation_qc', reveal_path=reveal_path)
 site.build(theme='serif')
 site.open()
 
-
+# %% Commands to upload to AWS
 print(f"aws --profile ucl s3 cp {reveal_path}/foundation_qc.html s3://reveal.internationalbrainlab.org/foundation_qc.html")
 print(f"aws --profile ucl s3 sync {reveal_path}/images/foundation_qc s3://reveal.internationalbrainlab.org/images/foundation_qc")
-
-# %%
-
-def make_pid_reveal_figures(pid):
-    path_pid = path_reveal.joinpath(pid)
-    path_pid.mkdir(exist_ok=True, parents=True)
-    if len(list(path_pid.glob('*.png'))) == 8:
-        return
-    ssl = SpikeSortingLoader(one=one, pid=pid)
-    sl = SessionLoader(one=one, eid=ssl.eid)
-    sl.load_trials()
-
-    sr = ssl.raw_electrophysiology(band="ap", stream=True)
-    srlf = ssl.raw_electrophysiology(band="lf", stream=True)
-    spikes, clusters, channels = ssl.load_spike_sorting(dataset_types=['spikes.samples'])
-    df_clusters = pd.DataFrame(ssl.merge_clusters(spikes, clusters, channels))
-    drift = ssl.load_spike_sorting_object('drift')
-
-    icok = np.where(df_clusters['bitwise_fail'] == 0)[0]
-    isok = np.isin(spikes['clusters'], icok)
-    behaviour_bounds = {'bounds': sl.trials['stimOn_times'].to_numpy()[[0, -1]]}
-
-    ssl.raster(spikes, channels, save_dir=path_pid.joinpath('01.png'), br=regions, time_series=behaviour_bounds,
-               drift=drift, title='All Units')
-
-    spikes_ok = {k: v[isok] for k, v in spikes.items()}
-    ssl.raster(spikes_ok, channels, save_dir=path_pid.joinpath('02.png'), br=regions, time_series=behaviour_bounds,
-               drift=drift, title='QC Passing Units')
-
-    c = 2
-    for t0 in np.floor(np.linspace(0, sr.rl, 5)[1:4]):
-        c += 1
-        ssl.plot_rawdata_snippet(sr, spikes, clusters, t0, channels=channels,
-                                 br=regions,
-                                 save_dir=path_pid.joinpath(f'{c:02.0f}a.png'),
-                                 gain=-96,
-                                 label=f'T{str(t0)}_raw',
-                                 title=f'T {t0:.2f}',
-                                 alpha=0,
-                                 processing=None)
-        ssl.plot_rawdata_snippet(sr, spikes, clusters, t0, channels=channels,
-                                 br=regions,
-                                 save_dir=path_pid.joinpath(f'{c:02.0f}b.png'),
-                                 gain=-96,
-                                 label=f'T{str(t0)}_destripe',
-                                 title=f'T {t0:.2f} s')
-
-def make_pid_reveal_figures_multiprocessing(pid):
-    try:
-        make_pid_reveal_figures(pid)
-    except Exception as e:
-        for _ in range(30):
-            print(f"Error processing PID {pid}: {str(e)}")
-
-#
-# jobs = []
-# for pid in tqdm.tqdm(PIDS):
-#     make_pid_reveal_figures(pid)
-
-
-jobs = []
-for pid in PIDS:
-    jobs.append(joblib.delayed(make_pid_reveal_figures_multiprocessing)(pid))
-
-list(tqdm.tqdm(joblib.Parallel(return_as='generator', n_jobs=8)(jobs)))
-
-
 
 
