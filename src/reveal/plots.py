@@ -5,7 +5,7 @@ import iblatlas.atlas
 from brainbox.io.one import SpikeSortingLoader, SessionLoader
 
 
-def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None) -> list:
+def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None):
     """
     Generate and save a set of reveal figures for a given probe insertion.
 
@@ -26,7 +26,7 @@ def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None) -> l
 
     Returns:
     --------
-    list of figures
+    None
 
     Side Effects:
     -------------
@@ -49,7 +49,6 @@ def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None) -> l
     - It uses SpikeSortingLoader and SessionLoader to retrieve necessary data.
     - The function generates plots for all units, QC passing units, and raw data snippets at different time points.
     """
-
     assert one is not None, 'one must be provided'
     assert pid is not None, 'pid must be provided'
     if regions is None:
@@ -58,7 +57,7 @@ def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None) -> l
     path_pid = path_reveal.joinpath(pid)
     path_pid.mkdir(exist_ok=True, parents=True)
     if len(list(path_pid.glob('*.png'))) == 8:
-        return []
+        return
 
     # loads spike sorting, trial data, and recording meta-data
     ssl = SpikeSortingLoader(one=one, pid=pid)
@@ -75,20 +74,17 @@ def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None) -> l
     behaviour_bounds = {'bounds': sl.trials['stimOn_times'].to_numpy()[[0, -1]]}
 
     # raster plots
-    all_figures = []
-    fig, _ = ssl.raster(spikes, channels, save_dir=path_pid.joinpath('01.png'), br=regions, time_series=behaviour_bounds,
+    ssl.raster(spikes, channels, save_dir=path_pid.joinpath('01.png'), br=regions, time_series=behaviour_bounds,
                drift=drift, title='All Units')
-    all_figures.append(fig)
     spikes_ok = {k: v[isok] for k, v in spikes.items()}
-    fig, _ = ssl.raster(spikes_ok, channels, save_dir=path_pid.joinpath('02.png'), br=regions, time_series=behaviour_bounds,
+    ssl.raster(spikes_ok, channels, save_dir=path_pid.joinpath('02.png'), br=regions, time_series=behaviour_bounds,
                drift=drift, title='QC Passing Units')
-    all_figures.append(fig)
 
     # raw data plots
     c = 2
     for t0 in np.floor(np.linspace(0, sr.rl, 5)[1:4]):
         c += 1
-        fig, _ = ssl.plot_rawdata_snippet(sr, spikes, clusters, t0, channels=channels,
+        ssl.plot_rawdata_snippet(sr, spikes, clusters, t0, channels=channels,
                                  br=regions,
                                  save_dir=path_pid.joinpath(f'{c:02.0f}a.png'),
                                  gain=-96,
@@ -96,12 +92,10 @@ def pid_electrophysiology_qc(path_reveal, pid=None, one=None, regions=None) -> l
                                  title=f'T {t0:.2f}',
                                  alpha=0,
                                  processing=None)
-        all_figures.append(fig)
-        fig, _ = ssl.plot_rawdata_snippet(sr, spikes, clusters, t0, channels=channels,
+        ssl.plot_rawdata_snippet(sr, spikes, clusters, t0, channels=channels,
                                  br=regions,
                                  save_dir=path_pid.joinpath(f'{c:02.0f}b.png'),
                                  gain=-96,
                                  label=f'T{str(t0)}_destripe',
                                  title=f'T {t0:.2f} s')
-        all_figures.append(fig)
-    return all_figures
+
