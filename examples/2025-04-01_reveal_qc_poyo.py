@@ -191,6 +191,11 @@ for pid in PIDS:
 
 list(tqdm.tqdm(joblib.Parallel(return_as='generator', n_jobs=8)(jobs)))
 
+for pid in PIDS:
+    if len(list(path_reveal.joinpath(pid).glob('*.png'))) == 8:
+        continue
+    print(f"PID {pid} failed to generate 8 images")
+
 # %% Builds the website locally
 from reveal.api import RevealSite
 
@@ -211,7 +216,7 @@ for i, pid in enumerate(PIDS):
         dict(image_path=png_images[6], image_path_compare=png_images[7], title=f"{pid[:8]}: raw data snippet 3/3", post=pid),
         ])[np.newaxis, :])
 print(c, c / len(PIDS))
-
+deck = np.concatenate(deck).T
 reveal_path = Path.home().joinpath('Documents/Reveal/reveal.internationalbrainlab.org')
 site = RevealSite(deck, name='foundation_qc', reveal_path=reveal_path)
 site.build(theme='serif')
