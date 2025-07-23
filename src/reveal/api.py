@@ -1,6 +1,9 @@
-from reveal import reveal
+import tqdm
+
 import webbrowser
 import pandas as pd
+
+from reveal import reveal
 
 
 class RevealSite:
@@ -53,7 +56,7 @@ class RevealSite:
         """
         if theme not in self.themes:
             raise ValueError(f"{theme} is not a revealJS theme! Use one of {str(self.themes)}")
-        for column_idx, col in enumerate(self.df):
+        for column_idx, col in tqdm.tqdm(enumerate(self.df), total=self.df.shape[1]):
             self.prez.new_section()
             for idx, slide in self.df[col].items():
                 if isinstance(slide, dict):
