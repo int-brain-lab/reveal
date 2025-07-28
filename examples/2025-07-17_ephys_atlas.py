@@ -11,32 +11,42 @@ from one.api import ONE
 import ephysatlas.fixtures
 import ephysatlas.reveal
 import ephysatlas.data
-
+import ephysatlas.features
 pid = str(np.random.choice(ephysatlas.fixtures.benchmark_pids))
 path_features = Path("/datadisk/Data/paper-ephys-atlas/ephys-atlas-decoding/features/2025_W28")
 df_features = ephysatlas.data.read_features_from_disk(path_features, strict=False)
+# also load the raw features without denoising (for comparison)
 df_features_raw = ephysatlas.data.read_features_from_disk(path_features, strict=False, load_denoised=False)
+df_features_raw = ephysatlas.features.EphysTransformer().fit_transform(df_features_raw)
 
 one = ONE(base_url="https://alyx.internationalbrainlab.org")
-path_model = Path(
-    "/datadisk/Data/paper-ephys-atlas/ephys-atlas-decoding/models/2025_W28_Cosmos_living-olivedrab-cassowary")
-path_model_no_coordinates = Path(
-    '/datadisk/Data/paper-ephys-atlas/ephys-atlas-decoding/models/2025_W28_Cosmos_sloppy-iris-zebu'
-)
-df_predictions = pd.read_parquet(path_model / "predictions.pqt")
+model_full = {
+    'path': (path_model := Path("/datadisk/Data/paper-ephys-atlas/ephys-atlas-decoding/models/2025_W28_Cosmos_living-olivedrab-cassowary")),
+    'df_predictions': pd.read_parquet(path_model / "predictions.pqt")
+}
+model_full['pids'] = model_full['df_predictions'].index.get_level_values(0)
+
+model_no_coordinates = {
+    'path': (path_model := Path('/datadisk/Data/paper-ephys-atlas/ephys-atlas-decoding/models/2025_W28_Cosmos_sloppy-iris-zebu')),
+    'df_predictions': pd.read_parquet(path_model / "predictions.pqt"),
+}
+model_no_coordinates['pids'] = model_no_coordinates['df_predictions'].index.get_level_values(0)
+
 path_figures = Path(f"/datadisk/Data/paper-ephys-atlas/reveal")
-pids_predict = df_predictions.index.get_level_values(level=0).unique()
 
 pids = df_features.index.get_level_values(level=0).unique()
 path_reveal = Path.home().joinpath('Documents/JS/reveal.internationalbrainlab.org')
 
 # learn the scaling (ideally this should be in the model data itself)
-scaler = sklearn.preprocessing.RobustScaler()
+scaler = sklearn.preprocessing.StandardScaler()
 x_list = ephysatlas.features.voltage_features_set()
 scaler.fit(df_features.loc[:, x_list])
 
+# aa = pd.DataFrame(scaler.transform(df_features.loc[pid, x_list]),  columns=x_list)
+# aa = pd.DataFrame(scaler.transform(df_features.loc[:, x_list]), columns=x_list).describe()
+
 # %%
-IMIN = 290
+IMIN = 0
 skip = ['26118c10-35dd-4ab1-9f0f-b9a89a1da070', '31d8dfb1-71fd-4c53-9229-7cd48bee07e4', '3ccb2d59-9e94-48e6-9e72-0b7b96bd3f9b',
         '530f1670-9412-44ac-afdb-935d46bcaad3', '7c11adc6-adbd-484f-8ae9-13946285e3f8', '9915765e-ff15-4371-b1aa-c2ef1db8a254',
         'a3ebc7f4-813a-4f06-a33e-9825c878f9c2', 'c250d4f4-7516-4cf1-a8bd-04873ca9e21c', 'dac5defe-62b8-4cc0-96cb-b9f923957c7f',
@@ -48,14 +58,15 @@ for i, pid in tqdm.tqdm(enumerate(pids), total=len(pids)):
     df_pid = df_features.loc[pid]
     ar = ephysatlas.reveal.AtlasReveal(one, pid=pid, df_pid=df_pid)
     # You can also save all figures at once
-    # ar.figure_01_features_with_histology_columns(save_dir=save_dir, scaler=scaler)
-    ar.figure_01_features_with_histology_columns(save_dir=save_dir, scaler=scaler, df_pid=df_raw_features.loc[pid], filename=f'{pid}_figure_01b_raw_features_with_histology_columns.png')
+    # ar.figure_01_features_with_histology_columns(save_dir=save_dir, scaler=scaler, df_pid=df_features.loc[pid], overwrite=True)
+    # ar.figure_01_features_with_histology_columns(save_dir=save_dir, scaler=scaler, df_pid=df_features_raw.loc[pid], filename=f'{pid}_figure_01b_raw_features_with_histology_columns.png', overwrite=True)
     # ar.figure_03_histology_slices(save_dir=save_dir)
-    # df_preds = df_predictions.loc[pid] if pid in pids_predict else None
-    # ar.figure_02_classifier_results(df_predictions=df_preds, path_model=path_model, save_dir=save_dir,
-    #                                 filename=f'{pid}_figure_02_classifier_results_0.png', overwrite=True)
-    # ar.figure_02_classifier_results(df_predictions=df_preds, path_model=path_model_no_coordinates, save_dir=save_dir,
-    #                                 filename=f'{pid}_figure_02_classifier_results_1.png', overwrite=True)
+    df_preds = model_full['df_predictions'].loc[pid] if pid in model_full['pids'] else None
+    ar.figure_02_classifier_results(df_predictions=df_preds, path_model=model_full['path'], save_dir=save_dir,
+                                    filename=f'{pid}_figure_02_classifier_results_0.png', overwrite=True)
+    df_preds = model_no_coordinates['df_predictions'].loc[pid] if pid in model_no_coordinates['pids'] else None
+    ar.figure_02_classifier_results(df_predictions=df_preds, path_model=model_no_coordinates['path'], save_dir=save_dir,
+                                    filename=f'{pid}_figure_02_classifier_results_1.png', overwrite=True)
     # ar.figure_04_ap_voltage(save_dir=save_dir)
     # ar.figure_05_lfp_voltage(save_dir=save_dir)
     # ar.figure_06_bad_channels(save_dir=save_dir)
@@ -64,7 +75,7 @@ for i, pid in tqdm.tqdm(enumerate(pids), total=len(pids)):
 # %% Builds the website locally
 from reveal.api import RevealSite
 pids = df_features.index.get_level_values(level=0).unique()
-pids_train = df_predictions.index.get_level_values(level=0).unique()
+pids_train =  model_full['pids'].unique()
 
 SITE_NAME = 'ephys_atlas_reveal'
 c = 0
@@ -83,11 +94,19 @@ for i, pid in enumerate(pids):
         prefix = ''
     deck.append(np.array([
         dict(
-            image_path=next(path_pid.glob('*_figure_01*.png'), None),
+            image_path=next(path_pid.glob('*_figure_01_features*.png'), None),
             title=f"{prefix} {pid[:8]}: Features", post=pid
         ),
         dict(
-            image_path=next(path_pid.glob('*_figure_02*.png'), None),
+            image_path=next(path_pid.glob('*_figure_01b_raw_features*.png'), None),
+            title=f"{prefix} {pid[:8]}: Features", post=pid
+        ),
+        dict(
+            image_path=next(path_pid.glob('*_figure_02_classifier_results_0.png'), None),
+            title=f"{prefix} {pid[:8]}: Classifier Results", post=pid
+        ),
+        dict(
+            image_path=next(path_pid.glob('*_figure_02_classifier_results_1.png'), None),
             title=f"{prefix} {pid[:8]}: Classifier Results", post=pid
         ),
         dict(
@@ -109,7 +128,6 @@ for i, pid in enumerate(pids):
             title=f"{prefix} {pid[:8]}: Bad Channels", post=pid
         ),
         ])[np.newaxis, :])
-print(c, c / len(pids))
 
 deck = np.concatenate(deck).T
 site = RevealSite(deck, name=SITE_NAME, reveal_path=path_reveal)
