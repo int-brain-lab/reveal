@@ -52,10 +52,10 @@ npm install
 `npm start -- --port=8001`
 
 ## Serve the slide deck on a static website on AWS S3
-aws --profile ibl s3 sync ~/Documents/JS/reveal.js s3://reveal.internationalbrainlab.org --delete --exclude reveal.js/node_modules
+aws --profile ibl s3 sync ~/Documents/JS/reveal.js s3://reveal.internationalbrainlab.org --delete --exclude "reveal.js/node_modules/*"
 
 ## Create a new website
-`aws --profile ibl s3 sync ~/Documents/JS/reveal.js s3://reveal.internationalbrainlab.org --exclude reveal.js/node_modules`
+`aws --profile ibl s3 sync ~/Documents/JS/reveal.js s3://reveal.internationalbrainlab.org --exclude "reveal.js/node_modules/*"`
 http://reveal.internationalbrainlab.org.s3-website-us-east-1.amazonaws.com
 
 
@@ -87,5 +87,5 @@ echo http://$bucket.s3-website-us-east-1.amazonaws.com
 ```shell
 bucket=reveal.internationalbrainlab.org
 aws --profile ibl s3 sync ~/Documents/JS/reveal s3://reveal.internationalbrainlab.org --delete
-echo http://$bucket.s3-website-us-east-1.amazonaws.com --exclude reveal.js/node_modules`
+echo http://$bucket.s3-website-us-east-1.amazonaws.com --exclude "reveal.js/node_modules/*"`
 ```
